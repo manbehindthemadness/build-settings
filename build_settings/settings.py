@@ -311,7 +311,6 @@ class BuildSettings:
             raise ValueError(f'file not loaded {file}')
         for section in self.config.sections():
             for (key, val) in self.config.items(section):
-                print('(key, val)', (key, val))
                 store[key] = val
                 val = val.replace('\n', '')
                 self.eval_set(key, val)
@@ -397,7 +396,7 @@ class BuildSettings:
         This will add a setting into our setup.
         """
         if setting in self.settings.keys():
-            raise KeyError
+            self.set(setting, value)
         else:
             self.settings[setting] = value
             self.eval_set(setting, value)
