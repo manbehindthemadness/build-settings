@@ -173,6 +173,7 @@ class BuildSettings:
             latest_backup = backup_files[0]
             print(f'restoring settings from {latest_backup}')
             shutil.copy(latest_backup, self.filename)
+            self.upgrade()  # Merge any new settings that may have arrived.
         pass
 
     def create_backup_folder(self):
