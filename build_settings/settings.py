@@ -140,6 +140,7 @@ class BuildSettings:
         self.defaults = Path(self.path + defaults)
         self.default_settings = dict()
         self.backup_folder = self.filename.parent / ".settings"
+        print(f'backups will be stored in {self.backup_folder.as_posix()}')
         self.upgrade()
 
     def calculate_resources(self):
