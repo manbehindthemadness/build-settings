@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="build-settings",
-    version="0.1.3",
+    version="0.1.4",
     author="Manbehindthemadness",
     author_email="manbehindthemadness@gmail.com",
     description="An extension of configparser",

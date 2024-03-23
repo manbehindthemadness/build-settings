@@ -344,7 +344,7 @@ class BuildSettings:
             store = self.default_settings
         self._read_file(file)
         if not len(self.config.sections()):
-            raise ValueError(f'file not loaded {file}')
+            raise ValueError(f'file not loaded because it no contents: {file}')
         for section in self.config.sections():
             for (key, val) in self.config.items(section):
                 if section == 'secure':
@@ -353,15 +353,14 @@ class BuildSettings:
                     store[key] = val
                     val = val.replace('\n', '')
                     self.eval_set(key, val)
-        if not self.config_name and file != self.defaults:  # Determine if the settings are factory default.
-            if self.tmp_filename.is_file():  # See if there is a partial save out there.
-                print('partial save found', self.tmp_filename)
-                self.load(bkp=self.tmp_filename)  # Load configs from temp instead of defaults.
-                print('reloading from temp')
-            else:
-                if NOTIFY:
+        if NOTIFY:
+            try:
+                if compare_settings(self.filename, self.defaults):  # Determine if the settings are factory default.
                     print('WARNING: Factory settings detected')
                     NOTIFY = False
+            except FileNotFoundError:
+                print('configuration file not found, writing factory settings')
+                NOTIFY = False
         pass
         return self
 
