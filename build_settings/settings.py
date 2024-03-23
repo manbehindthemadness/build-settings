@@ -39,11 +39,9 @@ def compare_settings(file1: [Path, str], file2: [Path, str]) -> bool:
         """
         parser = configparser.ConfigParser()
 
-        # Read the file
         with open(file_path, 'r') as file:
             parser.read_file(file)
 
-        # Get all sections and settings
         settings = {}
         for section in parser.sections():
             settings[section] = {}
@@ -58,6 +56,24 @@ def compare_settings(file1: [Path, str], file2: [Path, str]) -> bool:
     settings1 = parse_settings(file1.as_posix())
     settings2 = parse_settings(file2.as_posix())
     return settings1 == settings2
+
+
+def remove_extra_settings(file_path: str, default_settings: dict):
+    """
+    Remove extra settings values from the specified file that aren't in the default settings.
+    """
+    parser = configparser.ConfigParser()
+
+    with open(file_path, 'r') as file:
+        parser.read_file(file)
+
+    for section in parser.sections():
+        for key in list(parser[section]):
+            if section not in default_settings or key not in default_settings[section]:
+                del parser[section][key]
+
+    with open(file_path, 'w') as file:
+        parser.write(file)
 
 
 def add_nested_key(dictionary: dict, keys: list, value: any):
@@ -161,6 +177,7 @@ class BuildSettings:
 
         self.required_disk_space = (configured_settings_size * 2) + default_settings_size
         self.required_memory = sys.getsizeof(self.settings)
+        return self
 
     def restore_from_backup(self):
         """
@@ -174,7 +191,7 @@ class BuildSettings:
             print(f'restoring settings from {latest_backup}')
             shutil.copy(latest_backup, self.filename)
             self.upgrade()  # Merge any new settings that may have arrived.
-        pass
+        return self
 
     def create_backup_folder(self):
         """
@@ -182,6 +199,7 @@ class BuildSettings:
         """
         backup_folder = self.filename.parent / ".settings"
         backup_folder.mkdir(exist_ok=True)
+        return self
 
     def create_backup(self):
         """
@@ -209,7 +227,7 @@ class BuildSettings:
                 self.restore_from_backup()
         elif len(backup_files):  # If we have configured settings backups and the actual file is missing, also restore.
             self.restore_from_backup()
-        pass
+        return self
 
     def file_swap(self):
         """
@@ -293,6 +311,14 @@ class BuildSettings:
             raise err
         return self
 
+    def clean(self):
+        """
+        This will remove any extra settings that aren't present in defaults.
+        """
+        remove_extra_settings(self.filename.as_posix(), self.default_settings)
+        self.upgrade()
+        return self
+
     def update_setting(
             self, filename: [str, Path], section: str, setting: str,
             value: [str, int, bool, tuple, list, dict], merge: bool = False
@@ -362,7 +388,6 @@ class BuildSettings:
             except FileNotFoundError:
                 print('configuration file not found, writing factory settings')
                 NOTIFY = False
-        pass
         return self
 
     @staticmethod
@@ -378,16 +403,13 @@ class BuildSettings:
         """
         self.create_backup_folder()
         self.create_backup()
-        pass
         if upgrade:
             self.load()
             store_old = self.settings
             store = self.default_settings
-            pass
         else:
             store_old = None
             store = self.settings
-            pass
         self._read_file(self.filename)
         for key in store:  # We need to get to the bottom of this changing size during operation.
             if upgrade:
@@ -434,6 +456,7 @@ class BuildSettings:
             print('waiting for file lock')
         while self.writing:
             time.sleep(0.001)
+        return self
 
     def add(self, setting: str, value: [str, int, bool, tuple, list, dict]):
         """

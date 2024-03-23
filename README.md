@@ -41,6 +41,10 @@ Upgrade settings merging new values from the defaults
 ```
 settings.upgrade()
 ```
+Clean extra settings from the running configuration that aren't present in defaults
+```
+settings.clean()
+```
 Settings within the `[secure]` section will be loaded directly into the environment and can only be retrieved using 
 `settings.get_secure("value")` method
 ```
