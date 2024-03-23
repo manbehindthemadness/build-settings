@@ -334,9 +334,12 @@ class BuildSettings:
             raise ValueError(f'file not loaded {file}')
         for section in self.config.sections():
             for (key, val) in self.config.items(section):
-                store[key] = val
-                val = val.replace('\n', '')
-                self.eval_set(key, val)
+                if section == 'secure':
+                    os.environ[key] = val
+                else:
+                    store[key] = val
+                    val = val.replace('\n', '')
+                    self.eval_set(key, val)
         if not self.config_name and file != self.defaults:  # Determine if the settings are factory default.
             if self.tmp_filename.is_file():  # See if there is a partial save out there.
                 print('partial save found', self.tmp_filename)
