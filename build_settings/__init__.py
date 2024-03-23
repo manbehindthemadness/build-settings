@@ -2,6 +2,6 @@
 Let's initialize some goodies.
 """
 try:
-    from settings import settings
+    from settings import BuildSettings
 except ImportError:
-    from .settings import settings  # noqa
+    from .settings import BuildSettings  # noqa
