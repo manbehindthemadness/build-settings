@@ -3,6 +3,7 @@ author: Kevin Eales
 """
 import os
 import sys
+import time
 import psutil
 import shutil
 import configparser
@@ -221,6 +222,12 @@ class BuildSettings:
             with open(_file, 'w') as file_:
                 file_.write('\n'.join(cleaned_lines))
 
+        def writable(file_path):
+            """
+            Check if a file is writable.
+            """
+            return os.access(file_path, os.W_OK)
+
         self.calculate_resources()
 
         if not self.check_disk_space():
@@ -232,6 +239,8 @@ class BuildSettings:
         # Continue with the file swap operation
         self.filename.touch()
         file = self.filename.as_posix()
+        while not writable(file):
+            time.sleep(0.001)
         with open(f'{file}.new', "w") as fh:
             self.config.write(fh)
         os.rename(file, file + "~")
@@ -356,7 +365,6 @@ class BuildSettings:
         """
         Saves the current settings model to file.
         """
-        print('saving settings')
         self.create_backup_folder()
         self.create_backup()
         pass
@@ -412,9 +420,9 @@ class BuildSettings:
         to prevent conflicts.
         """
         if self.writing:
-            print('waiting')
+            print('waiting for file lock')
         while self.writing:
-            pass
+            time.sleep(0.001)
 
     def add(self, setting: str, value: [str, int, bool, tuple, list, dict]):
         """
