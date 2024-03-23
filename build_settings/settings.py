@@ -139,7 +139,7 @@ class BuildSettings:
         self.settings = dict()
         self.defaults = Path(self.path + defaults)
         self.default_settings = dict()
-        self.backup_folder = self.filename.parent / ".settings"
+        self.backup_folder = fix_path(self.filename.parent / ".settings")
         print(f'backups will be stored in {self.backup_folder.as_posix()}')
         self.upgrade()
 
