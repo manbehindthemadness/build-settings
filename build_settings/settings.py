@@ -276,7 +276,6 @@ class BuildSettings:
     def eval_set(self, setting: str, value: any):
         """
         just an eval method
-        # TODO: Filter this execution to prevent code injection from the config files.
         """
         try:
             try:
@@ -344,7 +343,7 @@ class BuildSettings:
         for section in self.config.sections():
             for (key, val) in self.config.items(section):
                 if section == 'secure':
-                    os.environ[key] = val
+                    os.environ[key] = str(val)
                 else:
                     store[key] = val
                     val = val.replace('\n', '')
@@ -360,6 +359,13 @@ class BuildSettings:
                     NOTIFY = False
         pass
         return self
+
+    @staticmethod
+    def get_secure(value: str) -> str:
+        """
+        This will simply pull a setting from the secure section out of the environment.
+        """
+        return os.getenv(value)
 
     def save(self, upgrade: bool = False):
         """

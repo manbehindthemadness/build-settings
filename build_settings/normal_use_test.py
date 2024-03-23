@@ -7,3 +7,5 @@ settings = BuildSettings(setpath + '/tests_output.ini', setpath + '/tests.ini', 
 
 settings.add('test_setting_not_default', 'True')
 settings.save()
+
+print('secure_value', settings.get_secure('private_key'))
