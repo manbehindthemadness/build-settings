@@ -188,15 +188,19 @@ class BuildSettings:
         """
         backup_files = sorted(self.backup_folder.glob("*.ini"), key=os.path.getmtime)
         if self.filename.is_file():
-            if len(backup_files) >= 30:
-                oldest_backup = backup_files[0]
-                os.remove(oldest_backup)
+            comp_new = False
+            if backup_files:
+                newest_backup = backup_files[-1]
+                comp_new = compare_settings(self.filename, newest_backup)
+                if len(backup_files) >= 30:
+                    oldest_backup = backup_files[0]
+                    os.remove(oldest_backup)
 
             # Check if the contents of the current settings file differ from the default settings file
             is_empty = os.path.getsize(self.filename) == 0
             if not is_empty:
-                comp = compare_settings(self.filename, self.defaults)
-                if not comp:
+                comp_old = compare_settings(self.filename, self.defaults)
+                if not comp_new and not comp_old:
                     backup_filename = self.backup_folder / f"settings_{datetime.now().strftime('%Y%m%d%H%M%S')}.ini"
                     shutil.copy(self.filename, backup_filename)
             else:  # If the contents are the same, check to see if we have settings in backup and restore them.
