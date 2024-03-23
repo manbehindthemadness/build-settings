@@ -5,7 +5,6 @@ import os
 import sys
 import psutil
 import shutil
-import filecmp
 import configparser
 from pathlib import Path
 from functools import reduce
@@ -26,6 +25,38 @@ def fix_path(file_path: [Path, str]) -> Path:
         if '~' in file_path:
             result = result.expanduser()
     return result
+
+
+def compare_settings(file1: [Path, str], file2: [Path, str]) -> bool:
+    """
+    Compare the settings within two files and return True if they are the same, False otherwise.
+    """
+
+    def parse_settings(file_path: str) -> dict:
+        """
+        Parse settings from the specified file and return a dictionary of settings.
+        """
+        parser = configparser.ConfigParser()
+
+        # Read the file
+        with open(file_path, 'r') as file:
+            parser.read_file(file)
+
+        # Get all sections and settings
+        settings = {}
+        for section in parser.sections():
+            settings[section] = {}
+            for key, value in parser.items(section):
+                settings[section][key] = value
+
+        return settings
+
+    file1 = fix_path(file1)
+    file2 = fix_path(file2)
+
+    settings1 = parse_settings(file1.as_posix())
+    settings2 = parse_settings(file2.as_posix())
+    return settings1 == settings2
 
 
 def add_nested_key(dictionary: dict, keys: list, value: any):
@@ -136,7 +167,6 @@ class BuildSettings:
 
         backup_files = sorted(self.backup_folder.glob("*.ini"), key=os.path.getmtime, reverse=True)
 
-        # Check if there are any backup files
         if backup_files:
             latest_backup = backup_files[0]
             print(f'restoring settings from {latest_backup}')
@@ -164,7 +194,7 @@ class BuildSettings:
             # Check if the contents of the current settings file differ from the default settings file
             is_empty = os.path.getsize(self.filename) == 0
             if not is_empty:
-                comp = filecmp.cmp(self.filename, self.defaults)
+                comp = compare_settings(self.filename, self.defaults)
                 if not comp:
                     backup_filename = self.backup_folder / f"settings_{datetime.now().strftime('%Y%m%d%H%M%S')}.ini"
                     shutil.copy(self.filename, backup_filename)
@@ -186,20 +216,16 @@ class BuildSettings:
             with open(_file, 'r') as file_:
                 lines = file_.readlines()
 
-            # Remove extra blank lines
             cleaned_lines = [line.strip() for line in lines if line.strip() != '']
 
-            # Write the cleaned lines back to the file
             with open(_file, 'w') as file_:
                 file_.write('\n'.join(cleaned_lines))
 
         self.calculate_resources()
 
-        # Check disk space availability before proceeding
         if not self.check_disk_space():
             raise OSError("Insufficient disk space to perform file save operation")
 
-        # Check memory usage before proceeding
         if not self.check_memory_usage():
             raise MemoryError("Insufficient memory to perform file save operation")
 
@@ -303,9 +329,6 @@ class BuildSettings:
         elif bkp:
             file = bkp
             store = self.default_settings
-        # file = file.as_posix()
-        print('loading', file)
-        # self.config.read(file, encoding='utf-8-sig')
         self._read_file(file)
         if not len(self.config.sections()):
             raise ValueError(f'file not loaded {file}')
@@ -343,7 +366,6 @@ class BuildSettings:
             store_old = None
             store = self.settings
             pass
-        # self.config.read(self.filename, encoding='utf-8-sig')  # Read settings file.
         self._read_file(self.filename)
         for key in store:  # We need to get to the bottom of this changing size during operation.
             if upgrade:
