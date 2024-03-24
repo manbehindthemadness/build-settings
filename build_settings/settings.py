@@ -402,13 +402,16 @@ class BuildSettings:
         This will set the value of a specific secure setting, save it to the config, and
         load it into the environment.
         """
-        self.update_setting(
-            self.filename,
-            'secure',
-            key,
-            value
-        )
+        if key in self.config['secure']:
+            existing = self.config.get('secure', key)
+            if existing == value:
+                print('skipping')
+                return self
+            self.config['secure'][key] = value
+        else:
+            self.config.set('secure', key, value)
         os.environ[key] = value
+        self.file_swap() # Save setting value.
         return self
 
     def save(self, upgrade: bool = False):

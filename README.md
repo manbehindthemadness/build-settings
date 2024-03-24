@@ -71,6 +71,10 @@ private_key = 'age62gD5j6&gjwoifc?f385gwovS'
 ```
 print('secure_value', settings.get_secure('private_key'))
 ```
+Add or update a secure value *(immediately loaded into the environment and saved to file)*
+```
+settings.set_secure('key', 'value')
+```
 Backups are made when the settings file is changed, backups are **not** mode when the settings are default,
 empty, or are identical to the most recent backup.
 
