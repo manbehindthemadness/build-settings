@@ -397,6 +397,20 @@ class BuildSettings:
         """
         return os.getenv(value)
 
+    def set_secure(self, key: str, value: str):
+        """
+        This will set the value of a specific secure setting, save it to the config, and
+        load it into the environment.
+        """
+        self.update_setting(
+            self.filename,
+            'secure',
+            key,
+            value
+        )
+        os.environ[key] = value
+        return self
+
     def save(self, upgrade: bool = False):
         """
         Saves the current settings model to file.
